@@ -11,11 +11,24 @@ def aplicaLBP (img):
     
     cinza = cv2.cvtColor(img, cv2.COLOR_BGR2GRAY)
     cascata = cv2.CascadeClassifier('lbpcascade_frontalface.xml')
-    rostos = cascata.detectMultiScale(cinza, scaleFactor=1.2, minNeighbors=5);
+    rostos = cascata.detectMultiScale(cinza, scaleFactor=1.2, minNeighbors=5)
+
     if(len(rostos)==0):
         return None, None    
     (x, y, w, h) = rostos[0]    
     return cinza[y:y+w, x:x+h], rostos[0]
+
+def retornaLista(subpasta):
+    # retorna lista com dados de arquivo .txt disponibilizado no caminho do parâmetro
+    # deve esar em uma subpasta dentro da pasta raiz
+
+    # monta caminho
+    filename = os.path.abspath(os.curdir) + subpasta
+    # Le arquivo e transforma em lista de listas
+    with open(filename) as file:
+        lista = [line.split() for line in file.read().splitlines()]
+
+    return lista
 
 def prepararDados(caminho):
     diretorio = os.listdir(caminho) #nomes das pessoas
@@ -37,6 +50,12 @@ def prepararDados(caminho):
     return rostos, ids
 
 rostos, ids = prepararDados(caminho_lfw)
+
+#carrega arquivos texto da base LFW
+lfw_names     = retornaLista("/txt_lfw/lfw-names.txt")
+pairsDevTrain = retornaLista("/txt_lfw/pairsDevTrain.txt")
+pairsDevTest  = retornaLista("/txt_lfw/pairsDevTest.txt")
+pairs         = retornaLista("/txt_lfw/pairs.txt")
 
 reconhecedor = cv2.face.LBPHFaceRecognizer_create()
 
@@ -70,5 +89,3 @@ for t in testes:
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     indice = indice+1
-    
-    
