@@ -49,6 +49,39 @@ def prepararDados(caminho):
                 aux=aux+1
     return rostos, ids
 
+def draw_rectangle(img, rect):
+    (x, y, w, h) = rect
+    cv2.rectangle(img, (x, y), (x + w, y + h), (0, 255, 0), 2)
+
+def draw_text(img, text, x, y):
+    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
+
+def predict(test_img, nome):
+    img = test_img.copy()
+    face, rect = aplicaLBP(img)
+
+    label, confidence = reconhecedor.predict(face)
+    label_text = nomes_auxiliar[label]
+
+    draw_rectangle(img, rect)
+    draw_text(img, label_text, rect[0], rect[1] - 5)
+
+    return img
+
+def rodaTeste(dirTeste,nomes):
+
+    indice = 0
+    for t in dirTeste:
+        dirImg = os.listdir("teste\\" + t)
+        for img in dirImg:
+            imagem_teste = cv2.imread("teste\\" + t + "\\" + str(img))
+            preditor = predict(imagem_teste, t)
+    cv2.imshow(nomes[indice], preditor)
+    cv2.waitKey(0)
+    cv2.destroyAllWindows()
+    indice = indice + 1
+
+# prepara dados
 rostos, ids = prepararDados(caminho_lfw)
 
 #carrega arquivos texto da base LFW
@@ -57,35 +90,20 @@ pairsDevTrain = retornaLista("/txt_lfw/pairsDevTrain.txt")
 pairsDevTest  = retornaLista("/txt_lfw/pairsDevTest.txt")
 pairs         = retornaLista("/txt_lfw/pairs.txt")
 
+# cria reconhecedor LBP
 reconhecedor = cv2.face.LBPHFaceRecognizer_create()
-
+# treina reconhecedor com as imagens da pasta treinamento
 reconhecedor.train(rostos, np.array(ids))
 
-def draw_rectangle(img, rect):
-    (x, y, w, h) = rect
-    cv2.rectangle(img, (x, y), (x+w, y+h), (0, 255, 0), 2)
-
-def draw_text(img, text, x, y):
-    cv2.putText(img, text, (x, y), cv2.FONT_HERSHEY_PLAIN, 1.5, (0, 255, 0), 2)
-
-def predict(test_img):
-    img = test_img.copy()
-    face, rect = aplicaLBP(img)
-
-    label, confidence = reconhecedor.predict(face)
-    label_text = nomes_auxiliar[label]
-    
-    draw_rectangle(img, rect)
-    draw_text(img, label_text, rect[0], rect[1]-5)
-    
-    return img
-
+# testes
 indice = 0
 testes = os.listdir("teste") #caminho do conjunto de testes
 for t in testes:
     imagem_teste = cv2.imread("teste\\" + str(t))
-    preditor = predict(imagem_teste)
+    preditor = predict(imagem_teste,t)
     cv2.imshow(nomes[indice], preditor)
     cv2.waitKey(0)
     cv2.destroyAllWindows()
     indice = indice+1
+
+rodaTeste(testes, nomes)
